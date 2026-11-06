@@ -1,4 +1,4 @@
-# 🪔 ANANTADEEPA: The Journey of Light (अनंतदीपा)
+# ANANTADEEPA: The Journey of Light (अनंतदीपा)
 ### A Pure 3D WebGL Particle Animation Odyssey Across the 7 Acts of Deepavali
 
 [![WebGL 2.0](https://img.shields.io/badge/WebGL-2.0%20%2F%20GLSL-gold.svg)](https://threejs.org/)
@@ -13,7 +13,7 @@
 
 ---
 
-## 🌟 Overview
+## Overview
 
 **ANANTADEEPA (अनंतदीपा)** is a production-ready, highly polished, single-page interactive 3D scrollytelling web application. Adapting the exact architecture, interaction model, and visual elegance of **ORIGIN** (*origin-life.netlify.app*), it renders the spiritual, philosophical, and cultural narrative of **Diwali (Deepavali)** across its complete 7-act chronological sequence in the Vikram Samvat calendar.
 
@@ -25,7 +25,7 @@ The entire visual experience is rendered as **pure 3D WebGL particle animation**
 
 ---
 
-## 📜 The 7 Sacred Acts of Diwali
+## The 7 Sacred Acts of Diwali
 
 | Act | Tithi / Day | Sacred Title | 3D Particle Constellation (From Reference Artwork) | Spiritual Lore |
 |:---:|:---|:---|:---|:---|
@@ -39,7 +39,7 @@ The entire visual experience is rendered as **pure 3D WebGL particle animation**
 
 ---
 
-## 🛠️ Technology Architecture
+## Technology Architecture
 
 ### 1. Pure WebGL Particle Engine (Three.js + GLSL)
 - **Constant 65,000 Particles**: Single `THREE.BufferGeometry` bound to a single `THREE.Points` mesh.
@@ -82,7 +82,7 @@ The entire visual experience is rendered as **pure 3D WebGL particle animation**
 
 ---
 
-## 🎮 Interaction Controls
+## Interaction Controls
 
 | Action | Desktop Input | Mobile / Touch Gesture |
 |:---|:---|:---|
@@ -98,14 +98,14 @@ The entire visual experience is rendered as **pure 3D WebGL particle animation**
 
 ---
 
-## 🚀 Live Application & GitHub Pages
+## Live Application & GitHub Pages
 
-🌐 **Live Experience**: [https://naringrekarneel.github.io/ANANTADEEPA/](https://naringrekarneel.github.io/ANANTADEEPA/)  
-💻 **Local Development**: `http://localhost:8080`
+- **Live Experience**: [https://naringrekarneel.github.io/ANANTADEEPA/](https://naringrekarneel.github.io/ANANTADEEPA/)  
+- **Local Development**: `http://localhost:8080`
 
 ---
 
-## 📁 Repository Structure
+## Repository Structure
 
 ```
 ANANTADEEPA/
@@ -129,18 +129,18 @@ ANANTADEEPA/
 
 ---
 
-## 🪔 Sacred Blessings
+## Sacred Blessings
 
 May the celestial radiance of **ANANTADEEPA** bring auspicious health, boundless prosperity, and eternal peace to you and your loved ones.  
 **शुभ दीपावली · Happy Deepavali!**
 
 ---
 
-## ⚖️ Copyright & Author
+## Copyright & Author
 
 **Conceived, Designed & Created by @neel naringrekar**  
 Copyright © 2026 @neel naringrekar. All rights reserved.
 
-- 📸 **Instagram**: [@neels.edits](https://www.instagram.com/neels.edits/)
-- 🐙 **GitHub**: [@naringrekarneel](https://github.com/naringrekarneel)
-- 💼 **LinkedIn**: [neelnaringrekar](https://www.linkedin.com/in/neelnaringrekar/)
+- **Instagram**: [@neels.edits](https://www.instagram.com/neels.edits/)
+- **GitHub**: [@naringrekarneel](https://github.com/naringrekarneel)
+- **LinkedIn**: [neelnaringrekar](https://www.linkedin.com/in/neelnaringrekar/)
