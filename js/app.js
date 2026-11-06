@@ -40,7 +40,7 @@
   let fireworksMesh = null;
   let fireworksGeometry = null;
   let fireworksMaterial = null;
-  const FIREWORKS_MAX = 5000;
+  const FIREWORKS_MAX = 8000;
   const fireworksPool = [];
   let fireworksPoolIdx = 0;
   const activeRockets = [];
@@ -319,13 +319,14 @@
     const fireworksVS = `
       attribute float aSize;
       attribute vec3 aColor;
+      uniform float uPixelRatio;
       varying vec3 vColor;
       void main() {
         vColor = aColor;
         vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
         gl_Position = projectionMatrix * mvPosition;
-        float distScale = clamp(9.8 / -mvPosition.z, 0.45, 1.35);
-        gl_PointSize = clamp(aSize * (50.0 / 9.8) * distScale, 2.5, 24.0);
+        float distScale = clamp(9.8 / -mvPosition.z, 0.40, 1.6);
+        gl_PointSize = clamp(aSize * uPixelRatio * distScale, 2.5, 64.0);
       }
     `;
 
@@ -334,16 +335,19 @@
       void main() {
         float r = length(gl_PointCoord - vec2(0.5));
         if (r > 0.5) discard;
-        float core = smoothstep(0.4, 0.02, r);
-        float halo = pow(1.0 - r * 2.0, 2.0);
-        vec3 finalCol = vColor + vec3(0.5) * core;
-        gl_FragColor = vec4(finalCol * (core * 0.9 + halo * 0.6), 1.0);
+        float core = smoothstep(0.5, 0.0, r);
+        float innerWhite = smoothstep(0.18, 0.0, r);
+        vec3 col = vColor * core + vec3(1.0) * innerWhite * 0.95;
+        gl_FragColor = vec4(col, core);
       }
     `;
 
     fireworksMaterial = new THREE.ShaderMaterial({
       vertexShader: fireworksVS,
       fragmentShader: fireworksFS,
+      uniforms: {
+        uPixelRatio: { value: Math.min(window.devicePixelRatio, 2) }
+      },
       transparent: true,
       depthTest: false,
       depthWrite: false,
@@ -351,7 +355,9 @@
     });
 
     fireworksMesh = new THREE.Points(fireworksGeometry, fireworksMaterial);
-    fireworksMesh.renderOrder = 999;
+    fireworksMesh.position.z = 1.5; // Render in front of master particle artworks
+    fireworksMesh.renderOrder = 9999;
+    fireworksMesh.frustumCulled = false;
     scene.add(fireworksMesh);
   }
 
@@ -613,27 +619,27 @@
       [[0.98, 0.22, 0.80], [1.0, 0.85, 0.25], [0.65, 0.35, 1.0]]
     ];
 
-    // Launch 3 to 4 rockets starting from down below the screen
-    const rocketCount = 3 + Math.floor(Math.random() * 2);
-    const startY = -5.8;
+    // Launch 4 to 5 rockets starting right at visible bottom of screen
+    const rocketCount = 4 + Math.floor(Math.random() * 2);
+    const startY = -4.4;
 
     for (let r = 0; r < rocketCount; r++) {
       const fraction = (r + 0.5) / rocketCount;
-      const startX = (fraction - 0.5) * 8.0 + (Math.random() - 0.5) * 1.5;
-      const targetY = 1.0 + Math.random() * 2.4;
-      const targetX = startX + (Math.random() - 0.5) * 2.5;
-      const targetZ = (Math.random() - 0.5) * 2.0;
+      const startX = (fraction - 0.5) * 7.5 + (Math.random() - 0.5) * 1.2;
+      const targetY = 1.0 + Math.random() * 2.2;
+      const targetX = startX + (Math.random() - 0.5) * 2.2;
+      const targetZ = (Math.random() - 0.5) * 1.5;
 
       const palette = shellPalettes[r % shellPalettes.length];
 
       activeRockets.push({
         x: startX,
-        y: startY - (Math.random() * 0.8), // slight stagger in launch timing
+        y: startY - (r * 0.10), // staggered launches
         z: targetZ,
         targetX: targetX,
         targetY: targetY,
-        speedY: 13.5 + Math.random() * 3.0,
-        speedX: (targetX - startX) * 2.2,
+        speedY: 16.0 + Math.random() * 3.5,
+        speedX: (targetX - startX) * 2.8,
         palette: palette,
         exploded: false
       });
@@ -652,9 +658,26 @@
       }
     }
 
+    // Festive flash on background atmosphere
+    if (DOM.ambientGlow) {
+      DOM.ambientGlow.style.background = `
+        radial-gradient(circle at 50% 35%, rgba(255, 230, 120, 0.55) 0%, transparent 65%),
+        radial-gradient(circle at 50% 70%, rgba(255, 120, 20, 0.40) 0%, transparent 70%)
+      `;
+      setTimeout(() => {
+        const act = ACTS_DATA[STATE.currentAct];
+        if (DOM.ambientGlow && act) {
+          DOM.ambientGlow.style.background = `
+            radial-gradient(circle at 50% 50%, ${act.colorTheme.halo}22 0%, transparent 70%),
+            radial-gradient(circle at 50% 100%, ${act.colorTheme.accent}18 0%, transparent 60%)
+          `;
+        }
+      }, 350);
+    }
+
     // Atmospheric ambient ripple on the scene
     if (particleMaterial) {
-      particleMaterial.uniforms.uWave.value = 0.7;
+      particleMaterial.uniforms.uWave.value = 0.8;
       gsap.to(particleMaterial.uniforms.uWave, {
         value: 0.0,
         duration: 1.2,
@@ -665,8 +688,8 @@
     // Trigger the "Happy Diwali" celebration banner!
     triggerHappyDiwaliGreeting();
 
-    // 420 multi-colored explosion sparks fanning out all over the screen
-    const sparksCount = 420;
+    // 600 glowing radial sparks per rocket
+    const sparksCount = 600;
     for (let i = 0; i < sparksCount; i++) {
       const p = fireworksPool[fireworksPoolIdx];
       fireworksPoolIdx = (fireworksPoolIdx + 1) % FIREWORKS_MAX;
@@ -678,10 +701,10 @@
       // Spherical 3D explosion distribution covering wide radius
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
-      const speed = 3.2 + Math.pow(Math.random(), 0.5) * 6.5;
+      const speed = 3.5 + Math.pow(Math.random(), 0.5) * 8.5;
 
       p.vx = speed * Math.sin(phi) * Math.cos(theta);
-      p.vy = speed * Math.cos(phi) + 1.2;
+      p.vy = speed * Math.cos(phi) + 1.6;
       p.vz = speed * Math.sin(phi) * Math.sin(theta);
 
       const col = palette[Math.floor(Math.random() * palette.length)];
@@ -690,8 +713,8 @@
       p.b = col[2];
 
       p.life = 1.0;
-      p.decay = 0.36 + Math.random() * 0.26;
-      p.baseSize = 4.8 + Math.random() * 3.2;
+      p.decay = 0.45 + Math.random() * 0.35;
+      p.baseSize = 14.0 + Math.random() * 16.0;
     }
   }
 
@@ -885,6 +908,9 @@
     if (particleMaterial) {
       particleMaterial.uniforms.uPixelRatio.value = Math.min(window.devicePixelRatio, 2);
     }
+    if (fireworksMaterial && fireworksMaterial.uniforms && fireworksMaterial.uniforms.uPixelRatio) {
+      fireworksMaterial.uniforms.uPixelRatio.value = Math.min(window.devicePixelRatio, 2);
+    }
   }
 
   function onMouseMove(event) {
@@ -1003,7 +1029,7 @@
       toggleCardCollapse();
     } else if (event.code === 'KeyM') {
       DOM.btnAudio.click();
-    } else if (event.code === 'KeyF') {
+    } else if (event.code === 'KeyF' || (event.key && event.key.toLowerCase() === 'f')) {
       launchFirecrackerBurst();
     } else if (event.code === 'KeyH') {
       STATE.uiHidden = !STATE.uiHidden;
@@ -1064,43 +1090,45 @@
           rocket.y += rocket.speedY * dt;
           rocket.x += rocket.speedX * dt * 0.5;
 
-          // Emit trailing incandescent embers behind climbing rocket
-          for (let t = 0; t < 3; t++) {
+          // Emit thick blazing plume of trailing golden fire
+          for (let t = 0; t < 12; t++) {
             const p = fireworksPool[fireworksPoolIdx];
             fireworksPoolIdx = (fireworksPoolIdx + 1) % FIREWORKS_MAX;
 
-            p.x = rocket.x + (Math.random() - 0.5) * 0.16;
-            p.y = rocket.y - 0.2 - Math.random() * 0.35;
-            p.z = rocket.z + (Math.random() - 0.5) * 0.16;
+            p.x = rocket.x + (Math.random() - 0.5) * 0.22;
+            p.y = rocket.y - (Math.random() * 0.45);
+            p.z = rocket.z + (Math.random() - 0.5) * 0.22;
 
-            p.vx = (Math.random() - 0.5) * 0.6;
-            p.vy = -1.6 - Math.random() * 2.2;
-            p.vz = (Math.random() - 0.5) * 0.6;
+            p.vx = (Math.random() - 0.5) * 1.2;
+            p.vy = -2.5 - Math.random() * 3.5;
+            p.vz = (Math.random() - 0.5) * 1.2;
 
             p.r = 1.0;
-            p.g = 0.70 + Math.random() * 0.30;
-            p.b = 0.15;
+            p.g = 0.72 + Math.random() * 0.28;
+            p.b = 0.18;
 
-            p.life = 0.38 + Math.random() * 0.2;
-            p.decay = 1.6;
-            p.baseSize = 4.2 + Math.random() * 2.0;
+            p.life = 0.45 + Math.random() * 0.25;
+            p.decay = 1.8;
+            p.baseSize = 10.0 + Math.random() * 8.0;
           }
 
-          // Blazing rocket head spark leading the way up
-          const pHead = fireworksPool[fireworksPoolIdx];
-          fireworksPoolIdx = (fireworksPoolIdx + 1) % FIREWORKS_MAX;
-          pHead.x = rocket.x;
-          pHead.y = rocket.y;
-          pHead.z = rocket.z;
-          pHead.vx = 0;
-          pHead.vy = 0;
-          pHead.vz = 0;
-          pHead.r = 1.0;
-          pHead.g = 1.0;
-          pHead.b = 0.95;
-          pHead.life = 0.12;
-          pHead.decay = 0.6;
-          pHead.baseSize = 7.5;
+          // Brilliant incandescent rocket head leading the ascent
+          for (let h = 0; h < 3; h++) {
+            const pHead = fireworksPool[fireworksPoolIdx];
+            fireworksPoolIdx = (fireworksPoolIdx + 1) % FIREWORKS_MAX;
+            pHead.x = rocket.x + (Math.random() - 0.5) * 0.08;
+            pHead.y = rocket.y + (Math.random() - 0.5) * 0.08;
+            pHead.z = rocket.z;
+            pHead.vx = 0;
+            pHead.vy = 0;
+            pHead.vz = 0;
+            pHead.r = 1.0;
+            pHead.g = 1.0;
+            pHead.b = 0.95;
+            pHead.life = 0.15;
+            pHead.decay = 0.8;
+            pHead.baseSize = 22.0 + Math.random() * 6.0;
+          }
 
           // Check if rocket reached its explosion altitude!
           if (rocket.y >= rocket.targetY) {
