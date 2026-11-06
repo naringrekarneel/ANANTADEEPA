@@ -13,11 +13,13 @@ ACT_FILES = [
     'bhaubeej.png'
 ]
 
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+REFERENCE_DIR = os.path.join(REPO_ROOT, 'reference')
 TARGET_PARTICLES = 180000
 
 def process_act(act_idx, filename):
     t0 = time.time()
-    filepath = os.path.join(r'C:\diwali\reference', filename)
+    filepath = os.path.join(REFERENCE_DIR, filename)
     im = Image.open(filepath).convert('RGB')
     arr = np.array(im, dtype=np.float32)
     h, w, c = arr.shape
@@ -164,7 +166,7 @@ def process_act(act_idx, filename):
     size_offset = TARGET_PARTICLES * 6
     buffer[size_offset : size_offset + TARGET_PARTICLES] = size_out
     
-    out_path = os.path.join(r'C:\diwali\reference', f'act{act_idx}.bin')
+    out_path = os.path.join(REFERENCE_DIR, f'act{act_idx}.bin')
     buffer.tofile(out_path)
     file_mb = os.path.getsize(out_path) / (1024 * 1024)
     print(f'Act {act_idx} ({filename:22s}): {TARGET_PARTICLES} particles generated in {time.time()-t0:.2f}s -> {out_path} ({file_mb:.2f} MB)')

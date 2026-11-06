@@ -98,10 +98,34 @@ The entire visual experience is rendered as **pure 3D WebGL particle animation**
 
 ---
 
-## 🚀 Live Application
+## 🚀 Live Application & GitHub Pages
 
-The local web server is running on port **8080**:  
-👉 **`http://localhost:8080`**
+🌐 **Live Experience**: [https://naringrekarneel.github.io/ANANTADEEPA/](https://naringrekarneel.github.io/ANANTADEEPA/)  
+💻 **Local Development**: `http://localhost:8080`
+
+---
+
+## 📁 Repository Structure
+
+```
+ANANTADEEPA/
+├── .github/workflows/    # Automated GitHub Pages CI/CD deployment
+├── css/                  # Styling & glassmorphic UI design system
+│   └── style.css
+├── js/                   # Core application modules
+│   ├── app.js            # Scrollytelling, controls, intro flow & celebration logic
+│   ├── audio.js          # Procedural Web Audio API synthesizer (Tanpura, bells, fireworks)
+│   ├── data.js           # 7-act sacred narrative scriptures & lore
+│   └── particles.js      # Three.js & GLSL custom particle morphing engine
+├── reference/            # Particle binary datasets (.bin) & reference artwork (.png)
+├── scripts/              # Developer tools & offline particle generator scripts
+│   ├── generate_master_particles.py
+│   └── take_all_screenshots.py
+├── .gitignore            # Git exclusion rules
+├── .nojekyll             # GitHub Pages Jekyll bypass flag
+├── index.html            # Application entry point
+└── README.md             # Project documentation & author credits
+```
 
 ---
 

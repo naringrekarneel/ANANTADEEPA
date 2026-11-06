@@ -1,9 +1,26 @@
 # Logs and debug files
 *.log
 chrome_err.log
+
+# Temporary screenshots and test outputs
+act_screenshots/
+reference_backup/
 diff*.png
 screenshot*.png
+snap_*.png
+*.png
+!reference/*.png
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Node / JS debug scripts
+check_*.js
+test_*.js
 
 # OS metadata
 Thumbs.db
 .DS_Store
+

@@ -2,12 +2,14 @@ import subprocess
 import os
 import time
 
-os.makedirs(r'C:\diwali\act_screenshots', exist_ok=True)
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+SCREENSHOT_DIR = os.path.join(REPO_ROOT, 'act_screenshots')
+os.makedirs(SCREENSHOT_DIR, exist_ok=True)
 
 chrome_path = r'C:\Program Files\Google\Chrome\Application\chrome.exe'
 
 for act in range(7):
-    out_file = fr'C:\diwali\act_screenshots\act{act}.png'
+    out_file = os.path.join(SCREENSHOT_DIR, f'act{act}.png')
     url = f'http://localhost:8080/?act={act}'
     cmd = [
         chrome_path,
