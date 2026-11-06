@@ -26,7 +26,8 @@
     wheelCooldown: false,
     touchStartX: 0,
     touchStartY: 0,
-    uiHidden: false
+    uiHidden: false,
+    hasStarted: false
   };
 
   // Three.js Core Objects
@@ -48,6 +49,8 @@
   // DOM Elements Cache
   const DOM = {
     canvas: document.getElementById('webgl-canvas'),
+    introScreen: document.getElementById('intro-screen'),
+    btnStartJourney: document.getElementById('btn-start-journey'),
     uiLayer: document.getElementById('ui-layer'),
     ambientGlow: document.getElementById('ambient-glow'),
     tithiBadge: document.getElementById('tithi-badge'),
@@ -193,6 +196,58 @@
 
     // 10. Start 60-120 FPS Render Loop
     requestAnimationFrame(render);
+
+    // Initial check for Skip Intro query parameter (?skipintro=1)
+    if (urlParams.get('skipintro') === '1') {
+      startExperience();
+    } else {
+      if (particleGroup) {
+        particleGroup.visible = false;
+      }
+    }
+  }
+
+  /**
+   * Transition from Intro Screen into Act 0 (Origin of Diwali)
+   */
+  function startExperience() {
+    if (STATE.hasStarted) return;
+    STATE.hasStarted = true;
+
+    // Dismiss Intro Screen with smooth fade out
+    if (DOM.introScreen) {
+      DOM.introScreen.classList.add('dismissed');
+      setTimeout(() => {
+        DOM.introScreen.style.display = 'none';
+      }, 1000);
+    }
+    document.body.classList.remove('intro-active');
+
+    // Reveal 3D Particles with Swirling Stardust Birth into Act 0
+    if (particleGroup) {
+      particleGroup.visible = true;
+    }
+    if (particleMaterial) {
+      particleMaterial.uniforms.uProgress.value = 0.0;
+      gsap.to(particleMaterial.uniforms.uProgress, {
+        value: 1.0,
+        duration: 2.2,
+        ease: 'power2.out'
+      });
+    }
+
+    // Sacred Audio Blessing: Resonant Temple Bell + Meditative Tanpura Drone
+    if (window.audioEngine) {
+      window.audioEngine.resume();
+      window.audioEngine.playTempleBell(0.95);
+      if (DOM.audioBars) DOM.audioBars.classList.add('playing');
+      if (DOM.audioText) DOM.audioText.textContent = 'Audio';
+    }
+
+    // If Auto Tour is enabled, kickstart timer
+    if (STATE.autoTour) {
+      resetAutoTourTimer();
+    }
   }
 
   /**
@@ -801,6 +856,11 @@
     DOM.canvas.addEventListener('mousedown', onMouseDown, false);
     window.addEventListener('mouseup', onMouseUp, false);
 
+    // Start Journey Button on Intro Screen
+    if (DOM.btnStartJourney) {
+      DOM.btnStartJourney.addEventListener('click', startExperience);
+    }
+
     // Dedicated Firecracker Burst Button (Canvas click no longer scatters the artwork)
     if (DOM.btnFireworks) {
       DOM.btnFireworks.addEventListener('click', () => {
@@ -1016,6 +1076,14 @@
   }
 
   function onKeyDown(event) {
+    if (!STATE.hasStarted) {
+      if (event.code === 'Enter' || event.code === 'Space') {
+        event.preventDefault();
+        startExperience();
+      }
+      return;
+    }
+
     if (event.code === 'ArrowRight' || event.code === 'ArrowDown') {
       const nextAct = (STATE.currentAct + 1) % ACTS_DATA.length;
       goToAct(nextAct);

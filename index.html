@@ -22,7 +22,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 </head>
-<body>
+<body class="intro-active">
 
   <!-- Background Dynamic Atmosphere & Vignette -->
   <div id="ambient-glow"></div>
@@ -30,6 +30,99 @@
 
   <!-- WebGL 3D Canvas -->
   <canvas id="webgl-canvas"></canvas>
+
+  <!-- Atmospheric Intro Screen with Flickering Golden Diya -->
+  <aside class="intro-screen-overlay" id="intro-screen" role="dialog" aria-modal="true" aria-label="Welcome to Anantadeepa">
+    <div class="intro-backdrop"></div>
+    <div class="intro-card-container">
+      
+      <!-- Flickering Sacred Golden Diya -->
+      <div class="intro-diya-wrapper">
+        <div class="diya-light-halo"></div>
+        <div class="diya-art">
+          <svg class="diya-svg" viewBox="0 0 120 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="flame-grad" cx="50%" cy="65%" r="50%">
+                <stop offset="0%" stop-color="#FFFFFF" />
+                <stop offset="20%" stop-color="#FFF2A3" />
+                <stop offset="55%" stop-color="#FF9900" />
+                <stop offset="90%" stop-color="#FF4500" />
+                <stop offset="100%" stop-color="transparent" />
+              </radialGradient>
+              <linearGradient id="clay-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#E59B45" />
+                <stop offset="45%" stop-color="#B24F1A" />
+                <stop offset="100%" stop-color="#5C1D06" />
+              </linearGradient>
+              <linearGradient id="gold-rim-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#D4AF37" />
+                <stop offset="50%" stop-color="#FFF2B2" />
+                <stop offset="100%" stop-color="#D4AF37" />
+              </linearGradient>
+            </defs>
+            <!-- Animated Flame -->
+            <g class="diya-flame-group">
+              <path class="flame-outer" d="M60 10 C60 10 44 34 44 54 C44 68 51 74 60 74 C69 74 76 68 76 54 C76 34 60 10 60 10 Z" fill="url(#flame-grad)" />
+              <path class="flame-core" d="M60 26 C60 26 52 42 52 56 C52 64 56 68 60 68 C64 68 68 64 68 56 C68 42 60 26 60 26 Z" fill="#FFFFFF" opacity="0.9" />
+            </g>
+            <!-- Diya Wick -->
+            <line x1="60" y1="50" x2="60" y2="68" stroke="#3D1C06" stroke-width="3" stroke-linecap="round" />
+            <!-- Earthen Clay Diya Base -->
+            <ellipse cx="60" cy="72" rx="44" ry="15" fill="url(#clay-grad)" stroke="url(#gold-rim-grad)" stroke-width="2" />
+            <path d="M16 72 C16 86 36 95 60 95 C84 95 104 86 104 72 Z" fill="url(#clay-grad)" stroke="rgba(212,175,55,0.4)" stroke-width="1.5" />
+            <ellipse cx="60" cy="93" rx="22" ry="4" fill="#200A02" opacity="0.8" />
+          </svg>
+        </div>
+        <div class="intro-sparks-orbit">
+          <span class="spark s1">✦</span>
+          <span class="spark s2">✧</span>
+          <span class="spark s3">✦</span>
+          <span class="spark s4">✧</span>
+        </div>
+      </div>
+
+      <!-- Sacred Sanskrit Invocation -->
+      <div class="intro-sanskrit-tag">शुभ दीपावली · ॐ दीपज्योतिषे नमः</div>
+
+      <!-- Festive Greeting Title -->
+      <h1 class="intro-headline">
+        <span class="intro-brand">ANANTADEEPA</span>
+        <span class="intro-sub-brand">अनंतदीपा</span>
+      </h1>
+      <p class="intro-epic-title">The Sacred Journey of Light Across 7 Acts</p>
+
+      <!-- Traditional & Poetic Pleasant Note -->
+      <div class="intro-note-box">
+        <p class="intro-note-para">
+          May the divine light of Deepavali illuminate your path, dispel all darkness from your life, and shower your home with eternal peace, radiant health, spiritual wisdom, and boundless prosperity.
+        </p>
+        <p class="intro-note-sub">
+          Celebrate the eternal homecoming of Light. Put on your headphones, open your heart, and embark upon a living 3D stardust pilgrimage across the seven sacred traditions of Diwali.
+        </p>
+      </div>
+
+      <!-- Start Button with Glowing Diya Icon -->
+      <button class="btn-start-journey interactive" id="btn-start-journey" aria-label="Begin Sacred Journey">
+        <span class="btn-sparkle">✦</span>
+        <span class="btn-text">Begin Sacred Journey</span>
+        <span class="btn-icon">🪔</span>
+        <span class="btn-key-hint">Enter</span>
+      </button>
+
+      <!-- Creator Copyright & Social Links -->
+      <div class="intro-footer-author">
+        <span>Devotedly crafted by <strong>@neel naringrekar</strong> · Copyright © 2026</span>
+        <div class="intro-socials">
+          <a href="https://www.instagram.com/neels.edits/" target="_blank" rel="noopener noreferrer" title="Instagram (@neels.edits)" class="intro-social-link">Instagram</a>
+          <span>·</span>
+          <a href="https://github.com/naringrekarneel" target="_blank" rel="noopener noreferrer" title="GitHub (@naringrekarneel)" class="intro-social-link">GitHub</a>
+          <span>·</span>
+          <a href="https://www.linkedin.com/in/neelnaringrekar/" target="_blank" rel="noopener noreferrer" title="LinkedIn (neelnaringrekar)" class="intro-social-link">LinkedIn</a>
+        </div>
+      </div>
+
+    </div>
+  </aside>
 
   <!-- Interactive HUD / DOM UI Layer -->
   <main class="ui-layer" id="ui-layer">
