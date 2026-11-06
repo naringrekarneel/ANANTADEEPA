@@ -124,6 +124,7 @@ ANANTADEEPA/
 ├── .gitignore            # Git exclusion rules
 ├── .nojekyll             # GitHub Pages Jekyll bypass flag
 ├── index.html            # Application entry point
+├── vercel.json           # Vercel deployment headers & cache rules
 └── README.md             # Project documentation & author credits
 ```
 
