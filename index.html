@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ANANTADEEPA: The Journey of Light (अनंतदीपा) · The 7 Acts of Deepavali</title>
+  
+  <meta name="description" content="A cinematic, interactive 3D WebGL scrollytelling journey through the 7 sacred acts of Diwali. Built with Three.js, custom GLSL particle shaders, and Web Audio API.">
+  <meta name="author" content="@neel naringrekar">
+  <meta name="copyright" content="© @neel naringrekar">
+  <meta name="theme-color" content="#06070D">
+
+  <!-- Google Fonts Preconnect -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Rozha+One&display=swap" rel="stylesheet">
+
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+
+  <!-- Three.js & GSAP via CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+</head>
+<body>
+
+  <!-- Background Dynamic Atmosphere & Vignette -->
+  <div id="ambient-glow"></div>
+  <div class="cinematic-vignette"></div>
+
+  <!-- WebGL 3D Canvas -->
+  <canvas id="webgl-canvas"></canvas>
+
+  <!-- Interactive HUD / DOM UI Layer -->
+  <main class="ui-layer" id="ui-layer">
+
+    <!-- Top Navigation Header -->
+    <header class="top-header">
+      <!-- Brand Left -->
+      <div class="brand-wrapper interactive">
+        <h1 class="brand-title">
+          <span>ANANTADEEPA</span>
+          <span class="sanskrit-mark">अनंतदीपा</span>
+        </h1>
+        <p class="brand-sub">The Eternal Festival of Lights · <span class="brand-author">© @neel naringrekar</span></p>
+      </div>
+
+      <!-- Center Tithi Indicator -->
+      <div class="tithi-indicator interactive" id="tithi-badge" title="Active Vedic Lunar Day">
+        <div class="pulse-dot"></div>
+        <span class="tithi-text" id="tithi-label">KARTIKA KRISHNA PAKSHA · VIKRAM SAMVAT</span>
+      </div>
+
+      <!-- Actions Right -->
+      <div class="header-actions">
+        <!-- Audio Synthesizer Toggle -->
+        <button class="btn-glass interactive" id="btn-audio" aria-label="Toggle Meditative Tanpura Audio" title="Toggle Tanpura & Bell Audio (M)">
+          <div class="audio-bars playing" id="audio-icon-bars">
+            <span class="audio-bar"></span>
+            <span class="audio-bar"></span>
+            <span class="audio-bar"></span>
+          </div>
+          <span id="audio-btn-text">Audio</span>
+        </button>
+
+        <!-- Auto Tour Mode Toggle -->
+        <button class="btn-glass interactive" id="btn-tour" aria-label="Toggle Auto Tour Mode" title="Auto Tour (Space)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+          <span>Tour</span>
+          <span class="auto-tour-badge">Space</span>
+        </button>
+
+        <!-- Firecracker Burst Button -->
+        <button class="btn-glass interactive btn-fireworks" id="btn-fireworks" aria-label="Launch Diwali Firecracker Burst" title="Launch Diwali Firecracker Burst (F)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+          </svg>
+          <span>Burst</span>
+          <span class="auto-tour-badge">F</span>
+        </button>
+
+        <!-- Help / Lore Modal Button -->
+        <button class="btn-glass btn-icon-only interactive" id="btn-info" aria-label="Sacred Lore & Controls" title="Sacred Lore & Controls (?)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+        </button>
+
+        <!-- Creator Social Links Header -->
+        <div class="header-socials">
+          <a href="https://www.instagram.com/neels.edits/" target="_blank" rel="noopener noreferrer" class="btn-glass btn-icon-only interactive" title="Instagram (@neels.edits)" aria-label="Instagram">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+              <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+              <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+            </svg>
+          </a>
+          <a href="https://github.com/naringrekarneel" target="_blank" rel="noopener noreferrer" class="btn-glass btn-icon-only interactive" title="GitHub (@naringrekarneel)" aria-label="GitHub">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"></path>
+            </svg>
+          </a>
+          <a href="https://www.linkedin.com/in/neelnaringrekar/" target="_blank" rel="noopener noreferrer" class="btn-glass btn-icon-only interactive" title="LinkedIn (neelnaringrekar)" aria-label="LinkedIn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9h2.79v8.37H6.46v-8.37M7.86 6.81a1.63 1.63 0 1 0 0 3.26 1.63 1.63 0 0 0 0-3.26z"></path>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Narrative Story Card (Left Bottom) -->
+    <section class="story-container interactive" id="story-container">
+      <div class="glass-card" id="story-card">
+        
+        <!-- Eyebrow row with day pill and nav arrows -->
+        <div class="card-eyebrow-row">
+          <span class="act-badge" id="act-badge">PROLOGUE · THE ESSENCE</span>
+          <div class="nav-arrows">
+            <button class="arrow-btn" id="btn-collapse" aria-label="Minimize or Expand Card" title="Minimize / Expand Story Card (C)">
+              <svg id="collapse-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+            <button class="arrow-btn" id="btn-prev" aria-label="Previous Act" title="Previous Act (←)">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+              </svg>
+            </button>
+            <button class="arrow-btn" id="btn-next" aria-label="Next Act" title="Next Act (→)">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Title Group -->
+        <div class="card-title-group">
+          <p class="card-devanagari" id="card-devanagari">प्रकाशस्य उदयः</p>
+          <h2 class="card-title" id="card-title">The Awakening of Light</h2>
+          <p class="card-subtitle" id="card-subtitle">From Formless Void to Ayodhya's Illumination</p>
+        </div>
+
+        <!-- Sacred Shloka Box -->
+        <blockquote class="shloka-box" id="shloka-box">
+          <div class="shloka-devanagari" id="shloka-devanagari">तमसो मा ज्योतिर्गमय । मृत्योर्माऽमृतं गमय ॥</div>
+          <div class="shloka-translation" id="shloka-translation">"Lead us from darkness unto light, from ignorance unto truth."</div>
+        </blockquote>
+
+        <!-- Narrative Description -->
+        <p class="narrative-body" id="narrative-body">
+          Deepavali is the eternal triumph of righteousness over darkness. It celebrates the joyous homecoming of Bhagwan Shri Rama, Mata Sita, and Lakshmana to Ayodhya after fourteen years of exile, welcomed by a city lit with thousands of glowing earthen diyas. Spiritually, it signifies awakening the divine light residing within the human heart.
+        </p>
+
+        <!-- Ritual Pill Badges -->
+        <div class="ritual-tags-row" id="ritual-tags">
+          <!-- Injected dynamically -->
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Bottom Dock: Timeline Scrubber & Hints -->
+    <footer class="bottom-dock">
+      
+      <!-- Timeline Scrubber Container -->
+      <nav class="timeline-container interactive" aria-label="Chronological Diwali Acts Timeline">
+        <div class="timeline-track" id="timeline-track">
+          <!-- Background track line -->
+          <div class="track-line-bg"></div>
+          <!-- Animated gradient progress fill line -->
+          <div class="track-line-fill" id="track-line-fill"></div>
+
+          <!-- 7 Milestone Nodes -->
+          <button class="milestone-node active" data-act="0" aria-label="Act 0: Origin">
+            <span class="node-bead"></span>
+            <span class="node-label">Origin</span>
+          </button>
+          <button class="milestone-node" data-act="1" aria-label="Act 1: Vasu Baras">
+            <span class="node-bead"></span>
+            <span class="node-label">Vasu Baras</span>
+          </button>
+          <button class="milestone-node" data-act="2" aria-label="Act 2: Dhanteras">
+            <span class="node-bead"></span>
+            <span class="node-label">Dhanteras</span>
+          </button>
+          <button class="milestone-node" data-act="3" aria-label="Act 3: Chaturdashi">
+            <span class="node-bead"></span>
+            <span class="node-label">Chaturdashi</span>
+          </button>
+          <button class="milestone-node" data-act="4" aria-label="Act 4: Lakshmi Pujan">
+            <span class="node-bead"></span>
+            <span class="node-label">Lakshmi Pujan</span>
+          </button>
+          <button class="milestone-node" data-act="5" aria-label="Act 5: Padwa">
+            <span class="node-bead"></span>
+            <span class="node-label">Padwa</span>
+          </button>
+          <button class="milestone-node" data-act="6" aria-label="Act 6: Bhau Beej">
+            <span class="node-bead"></span>
+            <span class="node-label">Bhau Beej</span>
+          </button>
+        </div>
+      </nav>
+
+      <!-- Interaction Hints -->
+      <div class="hints-bar">
+        <span>Scroll / <kbd>←</kbd> <kbd>→</kbd> to travel</span>
+        <span>·</span>
+        <span>Drag to orbit</span>
+        <span>·</span>
+        <span><kbd>F</kbd> = Firecracker Burst</span>
+        <span>·</span>
+        <span><kbd>Space</kbd> = Auto Tour</span>
+        <span>·</span>
+        <span class="hints-copyright-wrapper">
+          <a href="https://www.instagram.com/neels.edits/" target="_blank" rel="noopener noreferrer" class="hints-copyright" title="Follow @neels.edits on Instagram">© @neel naringrekar</a>
+        </span>
+      </div>
+
+    </footer>
+
+  </main>
+
+  <!-- Info & Sacred Lore Modal -->
+  <aside class="modal-backdrop" id="info-modal" aria-hidden="true" role="dialog">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div>
+          <h2 class="modal-title">ANANTADEEPA (अनंतदीपा)</h2>
+          <p class="modal-subtitle">The Sacred Journey of Light Across 7 Acts</p>
+        </div>
+        <button class="btn-close-modal" id="btn-close-modal" aria-label="Close Modal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div>
+          <h3 class="modal-section-title">✨ Spiritual Philosophy of Deepavali</h3>
+          <p>
+            Diwali (Deepavali, from <em>Dīpa</em> = lamp, <em>Āvalī</em> = array) is far more than a festival of lights; it is an inward pilgrimage. Across seven sacred days in the month of Ashvin and Kartika (Vikram Samvat), each dawn and dusk awakens a distinct facet of human consciousness—from ecological gratitude (Vasu Baras) and holistic health (Dhanteras), to the vanquishing of ego (Naraka Chaturdashi), spiritual radiance (Lakshmi Pujan), renewed life (Padwa), and unconditional sibling love (Bhau Beej).
+          </p>
+        </div>
+
+        <div>
+          <h3 class="modal-section-title">🌌 Pure 3D WebGL Particle Animation (ORIGIN Architecture)</h3>
+          <p>
+            Inspired by <em>ORIGIN</em>, ANANTADEEPA renders each sacred act as a <strong>pure 30,000 living particle constellation</strong> with zero 2D flat image planes. Every single figure—Shri Rama and Sita, Gau Mata and Calf, the Three Golden Kalash, Shri Krishna defeating Narakasura, Goddess Mahalakshmi on Lotus, Lord Vamana and King Bali, and the Sister's Aarti Blessing—is constructed directly from the high-resolution master artwork coordinates, floating in 3D stereoscopic depth with thermal buoyancy, breathing flickers, pointer repulsion, and sparkler shockwaves.
+          </p>
+        </div>
+
+        <div>
+          <h3 class="modal-section-title">🎶 Procedural Web Audio Synthesis</h3>
+          <p>
+            Zero external audio files are loaded. The Tanpura drone (tuned to meditative D), the resonant physical modal partials of the Temple Bell (Ghanta), and the crackling bursts of Diwali Phuljhadi (sparklers) are 100% synthesized procedurally using the Web Audio API.
+          </p>
+        </div>
+
+        <div>
+          <h3 class="modal-section-title">⌨️ Keyboard & Gesture Controls</h3>
+          <div class="modal-shortcuts-grid">
+            <div class="shortcut-item">
+              <span>Next / Previous Act</span>
+              <span><kbd>→</kbd> / <kbd>←</kbd> or <kbd>Scroll</kbd></span>
+            </div>
+            <div class="shortcut-item">
+              <span>Minimize / Expand Card</span>
+              <span><kbd>C</kbd></span>
+            </div>
+            <div class="shortcut-item">
+              <span>Auto Tour Play/Pause</span>
+              <span><kbd>Space</kbd></span>
+            </div>
+            <div class="shortcut-item">
+              <span>Diwali Firecracker Burst</span>
+              <span><kbd>F</kbd> or Burst</span>
+            </div>
+            <div class="shortcut-item">
+              <span>Toggle Audio Sound</span>
+              <span><kbd>M</kbd></span>
+            </div>
+            <div class="shortcut-item">
+              <span>Orbit / Rotate 3D Form</span>
+              <span><kbd>Drag Mouse / Touch</kbd></span>
+            </div>
+            <div class="shortcut-item">
+              <span>Hide / Show HUD Interface</span>
+              <span><kbd>H</kbd></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Creator & Copyright Credit with Social Links -->
+        <div class="modal-copyright-bar">
+          <div class="copyright-content">
+            <span class="gold-sparkle">✦</span>
+            <span>Created with devotion by <strong>@neel naringrekar</strong> · Copyright © 2026</span>
+            <span class="gold-sparkle">✦</span>
+          </div>
+          <div class="modal-social-links">
+            <a href="https://www.instagram.com/neels.edits/" target="_blank" rel="noopener noreferrer" class="social-chip instagram" title="Instagram: @neels.edits">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+              </svg>
+              <span>@neels.edits</span>
+            </a>
+            <a href="https://github.com/naringrekarneel" target="_blank" rel="noopener noreferrer" class="social-chip github" title="GitHub: @naringrekarneel">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"></path>
+              </svg>
+              <span>GitHub</span>
+            </a>
+            <a href="https://www.linkedin.com/in/neelnaringrekar/" target="_blank" rel="noopener noreferrer" class="social-chip linkedin" title="LinkedIn: neelnaringrekar">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9h2.79v8.37H6.46v-8.37M7.86 6.81a1.63 1.63 0 1 0 0 3.26 1.63 1.63 0 0 0 0-3.26z"></path>
+              </svg>
+              <span>LinkedIn</span>
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </aside>
+
+  <!-- Application Logic Scripts -->
+  <script src="js/data.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/particles.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

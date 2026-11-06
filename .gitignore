@@ -1,0 +1,9 @@
+# Logs and debug files
+*.log
+chrome_err.log
+diff*.png
+screenshot*.png
+
+# OS metadata
+Thumbs.db
+.DS_Store
