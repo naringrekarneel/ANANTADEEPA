@@ -1160,8 +1160,9 @@ const PARTICLE_VERTEX_SHADER = /* glsl */`
 
     vDistToCamera = -mvPosition.z;
 
-    // 7. Perspective Point Sizing for Dense Pointillist Stardust (2.5px - 5.0px)
-    gl_PointSize = (aSize * 18.0 + 6.0) * (1.0 / -mvPosition.z) * uPixelRatio;
+    // 7. Perspective Point Sizing for Dense Pointillist Stardust (crisp on mobile and desktop)
+    float distScale = clamp(9.8 / -mvPosition.z, 0.50, 1.35);
+    gl_PointSize = clamp((aSize * 18.0 + 6.0) * (1.0 / 9.8) * distScale * uPixelRatio, 1.8, 8.0);
   }
 `;
 

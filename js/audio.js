@@ -291,6 +291,58 @@ class ProceduralAudioEngine {
   }
 
   /**
+   * Procedural Diwali Rocket Launch Whistle & Rising Whoosh
+   * Authentic acoustic rising whistle and ascending hiss
+   */
+  playRocketLaunchSound() {
+    if (!this.ctx || this.isMuted) return;
+    const now = this.ctx.currentTime;
+
+    // Rising whistle tone (260Hz -> 1200Hz)
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(260, now);
+    osc.frequency.exponentialRampToValueAtTime(1200, now + 0.42);
+
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(0.14, now + 0.08);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+
+    osc.connect(gain);
+    gain.connect(this.masterGain);
+    osc.start(now);
+    osc.stop(now + 0.48);
+
+    // Rising noise whoosh
+    const bufferSize = Math.floor(this.ctx.sampleRate * 0.42);
+    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(350, now);
+    filter.frequency.exponentialRampToValueAtTime(2200, now + 0.42);
+    filter.Q.setValueAtTime(3.5, now);
+
+    const noiseGain = this.ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.01, now);
+    noiseGain.gain.linearRampToValueAtTime(0.08, now + 0.08);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.42);
+
+    noise.connect(filter);
+    filter.connect(noiseGain);
+    noiseGain.connect(this.masterGain);
+    noise.start(now);
+    noise.stop(now + 0.45);
+  }
+
+  /**
    * Procedural Diwali Firecracker (Pataka) Explosion & Sizzling Shower
    * Combines punchy low-frequency acoustic pop with 40+ micro-sparkler crackles
    */

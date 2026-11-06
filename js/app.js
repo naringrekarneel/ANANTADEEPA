@@ -24,6 +24,7 @@
     mouseWorld: new THREE.Vector3(999, 999, 999),
     wheelAccumulator: 0,
     wheelCooldown: false,
+    touchStartX: 0,
     touchStartY: 0,
     uiHidden: false
   };
@@ -39,9 +40,10 @@
   let fireworksMesh = null;
   let fireworksGeometry = null;
   let fireworksMaterial = null;
-  const FIREWORKS_MAX = 3500;
+  const FIREWORKS_MAX = 5000;
   const fireworksPool = [];
   let fireworksPoolIdx = 0;
+  const activeRockets = [];
 
   // DOM Elements Cache
   const DOM = {
@@ -77,6 +79,32 @@
   };
 
   /**
+   * Calculate Camera Z distance dynamically based on screen aspect ratio
+   * Ensures the widescreen master artworks (width 16 units) fit edge-to-edge
+   * without being cropped on mobile portrait ratios.
+   */
+  function getResponsiveCameraZ(baseZ = 9.8) {
+    const aspect = window.innerWidth / window.innerHeight;
+    const baseAspect = 16.0 / 9.0;
+    if (aspect >= baseAspect) {
+      return baseZ;
+    }
+    const fov = (camera && camera.fov) ? camera.fov : 50;
+    const halfFovRad = (fov * 0.5 * Math.PI) / 180.0;
+    const targetWidth = aspect < 1.0 ? 17.2 : 16.6;
+    const requiredZ = targetWidth / (2.0 * Math.tan(halfFovRad) * aspect);
+    return Math.max(baseZ, requiredZ);
+  }
+
+  function getResponsiveCameraY(baseY = 0.0) {
+    const aspect = window.innerWidth / window.innerHeight;
+    if (aspect < 0.85) {
+      return baseY + 0.65;
+    }
+    return baseY;
+  }
+
+  /**
    * Initialize Three.js Scene, Camera, Renderer & Particle Engine
    */
   async function init() {
@@ -98,7 +126,7 @@
     if (initialActIndex < 0 || initialActIndex > 6) initialActIndex = 0;
     STATE.currentAct = initialActIndex;
 
-    // 3. Camera Setup for initial act
+    // 3. Camera Setup for initial act (with responsive aspect ratio scaling)
     const initialCam = ACTS_DATA[initialActIndex].camera;
     camera = new THREE.PerspectiveCamera(
       initialCam.fov || 50,
@@ -106,7 +134,9 @@
       0.1,
       1000
     );
-    camera.position.set(initialCam.position.x, initialCam.position.y, initialCam.position.z);
+    const initialZ = getResponsiveCameraZ(initialCam.position.z);
+    const initialY = getResponsiveCameraY(initialCam.position.y);
+    camera.position.set(initialCam.position.x, initialY, initialZ);
     camera.lookAt(initialCam.target.x, initialCam.target.y, initialCam.target.z);
 
     // 4. WebGL Renderer
@@ -141,15 +171,28 @@
     // 9. Bind All Interaction Events (Orbit, Scroll, Click, Touch, Keys)
     bindEvents();
 
+    // On mobile screens, start with the card collapsed so the 3D particle art takes full center stage
+    if (window.innerWidth <= 768 && urlParams.get('expand') !== '1') {
+      STATE.cardCollapsed = true;
+      if (DOM.storyContainer) {
+        DOM.storyContainer.classList.add('collapsed');
+      }
+      if (DOM.btnCollapse) {
+        DOM.btnCollapse.setAttribute('title', 'Expand Story Card (C)');
+      }
+    }
+
+    // Tapping collapsed card on mobile expands it
+    if (DOM.storyContainer) {
+      DOM.storyContainer.addEventListener('click', (e) => {
+        if (STATE.cardCollapsed && !e.target.closest('.nav-arrows')) {
+          toggleCardCollapse();
+        }
+      });
+    }
+
     // 10. Start 60-120 FPS Render Loop
     requestAnimationFrame(render);
-
-    // Auto-burst trigger for testing or shared URL parameter (?burst=1)
-    if (urlParams.get('burst') === '1') {
-      setTimeout(() => {
-        launchFirecrackerBurst();
-      }, 3500);
-    }
   }
 
   /**
@@ -281,7 +324,8 @@
         vColor = aColor;
         vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
         gl_Position = projectionMatrix * mvPosition;
-        gl_PointSize = aSize * (50.0 / -mvPosition.z);
+        float distScale = clamp(9.8 / -mvPosition.z, 0.45, 1.35);
+        gl_PointSize = clamp(aSize * (50.0 / 9.8) * distScale, 2.5, 24.0);
       }
     `;
 
@@ -415,12 +459,14 @@
       ease: 'power2.inOut'
     });
 
-    // Camera Tween to Majestic Chapter Viewpoint
+    // Camera Tween to Majestic Chapter Viewpoint (with responsive aspect ratio scaling)
     const camPreset = ACTS_DATA[targetIndex].camera;
+    const targetZ = getResponsiveCameraZ(camPreset.position.z);
+    const targetY = getResponsiveCameraY(camPreset.position.y);
     gsap.to(camera.position, {
       x: camPreset.position.x,
-      y: camPreset.position.y,
-      z: camPreset.position.z,
+      y: targetY,
+      z: targetZ,
       duration: morphDuration + 0.2,
       ease: 'power2.inOut',
       onUpdate: () => {
@@ -537,39 +583,25 @@
   }
 
   /**
-   * Launch Celebratory Diwali Firecracker (Skyburst) Shells
-   * Spawns an independent festive fireworks explosion in the 3D sky without disturbing the sacred image!
+   * Launch Celebratory Diwali Firecracker Rockets from bottom of the screen!
+   * Rockets ascend with trails of golden fire, explode all over the sky,
+   * and trigger the festive "Happy Diwali" greeting with fade in / out animation!
    */
   function launchFirecrackerBurst() {
     if (window.audioEngine) {
       window.audioEngine.resume();
-      if (typeof window.audioEngine.playFirecrackerExplosion === 'function') {
-        window.audioEngine.playFirecrackerExplosion();
-      } else {
-        window.audioEngine.playSparklerCrackle(36);
+      if (typeof window.audioEngine.playRocketLaunchSound === 'function') {
+        window.audioEngine.playRocketLaunchSound();
       }
-    }
-
-    // Atmospheric ambient ripple
-    if (particleMaterial) {
-      particleMaterial.uniforms.uWave.value = 0.6;
-      gsap.to(particleMaterial.uniforms.uWave, {
-        value: 0.0,
-        duration: 1.0,
-        ease: 'power2.out'
-      });
     }
 
     // Button visual feedback
     if (DOM.btnFireworks) {
       DOM.btnFireworks.classList.add('btn-bursting');
-      setTimeout(() => DOM.btnFireworks.classList.remove('btn-bursting'), 400);
+      setTimeout(() => DOM.btnFireworks.classList.remove('btn-bursting'), 600);
     }
 
-    // Launch 2 to 3 simultaneous celebratory skyburst shells
-    const shellCount = 2 + Math.floor(Math.random() * 2);
-    const sparksPerShell = 400;
-
+    // Shell color palettes
     const shellPalettes = [
       // Golden Anar (Incandescent gold, warm saffron, white)
       [[1.0, 0.95, 0.45], [1.0, 0.70, 0.15], [1.0, 1.0, 0.95]],
@@ -581,41 +613,107 @@
       [[0.98, 0.22, 0.80], [1.0, 0.85, 0.25], [0.65, 0.35, 1.0]]
     ];
 
-    for (let s = 0; s < shellCount; s++) {
-      const side = s === 0 ? -1.0 : (s === 1 ? 1.0 : (Math.random() > 0.5 ? 1.0 : -1.0));
-      const originX = side * (1.6 + Math.random() * 2.8);
-      const originY = 1.8 + Math.random() * 2.5;
-      const originZ = (Math.random() - 0.5) * 2.0;
+    // Launch 3 to 4 rockets starting from down below the screen
+    const rocketCount = 3 + Math.floor(Math.random() * 2);
+    const startY = -5.8;
 
-      const palette = shellPalettes[Math.floor(Math.random() * shellPalettes.length)];
+    for (let r = 0; r < rocketCount; r++) {
+      const fraction = (r + 0.5) / rocketCount;
+      const startX = (fraction - 0.5) * 8.0 + (Math.random() - 0.5) * 1.5;
+      const targetY = 1.0 + Math.random() * 2.4;
+      const targetX = startX + (Math.random() - 0.5) * 2.5;
+      const targetZ = (Math.random() - 0.5) * 2.0;
 
-      for (let i = 0; i < sparksPerShell; i++) {
-        const p = fireworksPool[fireworksPoolIdx];
-        fireworksPoolIdx = (fireworksPoolIdx + 1) % FIREWORKS_MAX;
+      const palette = shellPalettes[r % shellPalettes.length];
 
-        p.x = originX;
-        p.y = originY;
-        p.z = originZ;
+      activeRockets.push({
+        x: startX,
+        y: startY - (Math.random() * 0.8), // slight stagger in launch timing
+        z: targetZ,
+        targetX: targetX,
+        targetY: targetY,
+        speedY: 13.5 + Math.random() * 3.0,
+        speedX: (targetX - startX) * 2.2,
+        palette: palette,
+        exploded: false
+      });
+    }
+  }
 
-        // Spherical 3D explosion distribution
-        const theta = Math.random() * Math.PI * 2;
-        const phi = Math.acos(2 * Math.random() - 1);
-        const speed = 2.8 + Math.pow(Math.random(), 0.5) * 5.2;
-
-        p.vx = speed * Math.sin(phi) * Math.cos(theta);
-        p.vy = speed * Math.cos(phi) + 1.2;
-        p.vz = speed * Math.sin(phi) * Math.sin(theta);
-
-        const col = palette[Math.floor(Math.random() * palette.length)];
-        p.r = col[0];
-        p.g = col[1];
-        p.b = col[2];
-
-        p.life = 1.0;
-        p.decay = 0.40 + Math.random() * 0.30;
-        p.baseSize = 4.5 + Math.random() * 3.5;
+  /**
+   * Detonate Rocket in 360-degree Skyburst All Over the Screen
+   */
+  function detonateRocket(originX, originY, originZ, palette) {
+    if (window.audioEngine) {
+      if (typeof window.audioEngine.playFirecrackerExplosion === 'function') {
+        window.audioEngine.playFirecrackerExplosion();
+      } else {
+        window.audioEngine.playSparklerCrackle(38);
       }
     }
+
+    // Atmospheric ambient ripple on the scene
+    if (particleMaterial) {
+      particleMaterial.uniforms.uWave.value = 0.7;
+      gsap.to(particleMaterial.uniforms.uWave, {
+        value: 0.0,
+        duration: 1.2,
+        ease: 'power2.out'
+      });
+    }
+
+    // Trigger the "Happy Diwali" celebration banner!
+    triggerHappyDiwaliGreeting();
+
+    // 420 multi-colored explosion sparks fanning out all over the screen
+    const sparksCount = 420;
+    for (let i = 0; i < sparksCount; i++) {
+      const p = fireworksPool[fireworksPoolIdx];
+      fireworksPoolIdx = (fireworksPoolIdx + 1) % FIREWORKS_MAX;
+
+      p.x = originX;
+      p.y = originY;
+      p.z = originZ;
+
+      // Spherical 3D explosion distribution covering wide radius
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
+      const speed = 3.2 + Math.pow(Math.random(), 0.5) * 6.5;
+
+      p.vx = speed * Math.sin(phi) * Math.cos(theta);
+      p.vy = speed * Math.cos(phi) + 1.2;
+      p.vz = speed * Math.sin(phi) * Math.sin(theta);
+
+      const col = palette[Math.floor(Math.random() * palette.length)];
+      p.r = col[0];
+      p.g = col[1];
+      p.b = col[2];
+
+      p.life = 1.0;
+      p.decay = 0.36 + Math.random() * 0.26;
+      p.baseSize = 4.8 + Math.random() * 3.2;
+    }
+  }
+
+  let greetingTimer = null;
+  /**
+   * Display "Happy Diwali" Festive Greeting with Fade In and Fade Out Animation
+   */
+  function triggerHappyDiwaliGreeting() {
+    const el = document.getElementById('festive-greeting');
+    if (!el) return;
+
+    el.classList.add('visible');
+
+    if (greetingTimer) {
+      clearTimeout(greetingTimer);
+    }
+
+    // Hold for 3 seconds, then smoothly fade out
+    greetingTimer = setTimeout(() => {
+      el.classList.remove('visible');
+      greetingTimer = null;
+    }, 3200);
   }
 
   /**
@@ -777,6 +875,13 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
+    const curCam = ACTS_DATA[STATE.currentAct].camera;
+    const targetZ = getResponsiveCameraZ(curCam.position.z);
+    const targetY = getResponsiveCameraY(curCam.position.y);
+    camera.position.z = targetZ;
+    camera.position.y = targetY;
+    camera.lookAt(curCam.target.x, curCam.target.y, curCam.target.z);
+
     if (particleMaterial) {
       particleMaterial.uniforms.uPixelRatio.value = Math.min(window.devicePixelRatio, 2);
     }
@@ -811,6 +916,7 @@
 
   function onTouchStart(event) {
     if (event.touches.length === 1) {
+      STATE.touchStartX = event.touches[0].clientX;
       STATE.touchStartY = event.touches[0].clientY;
       STATE.prevMousePos = { x: event.touches[0].clientX, y: event.touches[0].clientY };
       STATE.isDragging = true;
@@ -837,8 +943,19 @@
   function onTouchEnd(event) {
     STATE.isDragging = false;
     if (event.changedTouches.length === 1) {
+      const deltaX = event.changedTouches[0].clientX - STATE.touchStartX;
       const deltaY = event.changedTouches[0].clientY - STATE.touchStartY;
-      if (Math.abs(deltaY) > 60) {
+
+      // Horizontal swipe (left/right) or vertical swipe (up/down) to travel acts
+      if (Math.abs(deltaX) > 42 && Math.abs(deltaX) > Math.abs(deltaY) * 1.1) {
+        if (deltaX < 0) {
+          const nextAct = (STATE.currentAct + 1) % ACTS_DATA.length;
+          goToAct(nextAct);
+        } else {
+          const prevAct = (STATE.currentAct - 1 + ACTS_DATA.length) % ACTS_DATA.length;
+          goToAct(prevAct);
+        }
+      } else if (Math.abs(deltaY) > 50 && Math.abs(deltaY) > Math.abs(deltaX) * 1.1) {
         if (deltaY < 0) {
           const nextAct = (STATE.currentAct + 1) % ACTS_DATA.length;
           goToAct(nextAct);
@@ -938,6 +1055,61 @@
       const sizeArr = fireworksGeometry.attributes.aSize.array;
       let hasActiveSparks = false;
       const dt = 0.016;
+
+      // Update Active Rockets Ascending from Bottom of Screen
+      for (let r = activeRockets.length - 1; r >= 0; r--) {
+        const rocket = activeRockets[r];
+        if (!rocket.exploded) {
+          hasActiveSparks = true;
+          rocket.y += rocket.speedY * dt;
+          rocket.x += rocket.speedX * dt * 0.5;
+
+          // Emit trailing incandescent embers behind climbing rocket
+          for (let t = 0; t < 3; t++) {
+            const p = fireworksPool[fireworksPoolIdx];
+            fireworksPoolIdx = (fireworksPoolIdx + 1) % FIREWORKS_MAX;
+
+            p.x = rocket.x + (Math.random() - 0.5) * 0.16;
+            p.y = rocket.y - 0.2 - Math.random() * 0.35;
+            p.z = rocket.z + (Math.random() - 0.5) * 0.16;
+
+            p.vx = (Math.random() - 0.5) * 0.6;
+            p.vy = -1.6 - Math.random() * 2.2;
+            p.vz = (Math.random() - 0.5) * 0.6;
+
+            p.r = 1.0;
+            p.g = 0.70 + Math.random() * 0.30;
+            p.b = 0.15;
+
+            p.life = 0.38 + Math.random() * 0.2;
+            p.decay = 1.6;
+            p.baseSize = 4.2 + Math.random() * 2.0;
+          }
+
+          // Blazing rocket head spark leading the way up
+          const pHead = fireworksPool[fireworksPoolIdx];
+          fireworksPoolIdx = (fireworksPoolIdx + 1) % FIREWORKS_MAX;
+          pHead.x = rocket.x;
+          pHead.y = rocket.y;
+          pHead.z = rocket.z;
+          pHead.vx = 0;
+          pHead.vy = 0;
+          pHead.vz = 0;
+          pHead.r = 1.0;
+          pHead.g = 1.0;
+          pHead.b = 0.95;
+          pHead.life = 0.12;
+          pHead.decay = 0.6;
+          pHead.baseSize = 7.5;
+
+          // Check if rocket reached its explosion altitude!
+          if (rocket.y >= rocket.targetY) {
+            rocket.exploded = true;
+            detonateRocket(rocket.x, rocket.y, rocket.z, rocket.palette);
+            activeRockets.splice(r, 1);
+          }
+        }
+      }
 
       for (let i = 0; i < FIREWORKS_MAX; i++) {
         const p = fireworksPool[i];
